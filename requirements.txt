@@ -1,0 +1,16 @@
+astroid==2.4.1
+colorama==0.4.3
+commonmark==0.9.1
+isort==4.3.21
+lazy-object-proxy==1.4.3
+mccabe==0.6.1
+pprintpp==0.4.0
+Pygments==2.6.1
+rich==1.1.0
+simple-term-menu==0.4.5
+six==1.14.0
+th==0.1.1
+tk==0.1.0
+toml==0.10.0
+typing-extensions==3.7.4.2
+wrapt==1.12.1
