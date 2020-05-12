@@ -48,8 +48,8 @@ def sendFile():
 
     RECIEVER = 'localhost'
 
-    mainsocket = socket.socket()
-    mainsocket.bind(("localhost", chosen_port))
+    mainsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    mainsocket.bind(("", chosen_port))
 
     console.print("Completed! Sender Setup at localhost:",chosen_port, style='bold yellow')
 
@@ -136,8 +136,8 @@ def recFile():
     console.print("Initializing Socket... ", style='bold red')
 
 
-    mainsocket = socket.socket()
-    mainsocket.bind(("localhost", chosen_port))
+    mainsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    mainsocket.bind(("", chosen_port))
     mainsocket.listen(5)
 
     console.print("Completed! Reciever Setup at localhost:", chosen_port, style='bold yellow')
