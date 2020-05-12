@@ -95,18 +95,17 @@ def sendFile():
                 console.print("sending file at .. ", filepath, style='bold yellow')
 
                 with open(filepath, 'rb') as file:
-                    for step in track(range(0, filesize, BATCH_SIZE)):
+                    for step in track(range(0, filesize + BATCH_SIZE, BATCH_SIZE)):
                         burst = file.read(BATCH_SIZE)
                         mainsocket.send(burst)
 
+                mainsocket.send(pickle.dumps("TXNCOMPLETE"))
+
                 console.print("File Successfully sent!", style='bold green')
 
-                token = pickle.loads(mainsocket.recv(512))
+                # establish that file has been sent
 
-                if token == 'COMPLETE':
-                    console.print("File Successfully Recieved!", style='bold green')
-                else:
-                    console.print("Some Error", style='bold red')
+                console.print("File Successfully Recieved!", style='bold green')
 
             else:
                 console.print("File Send Request Denied. ", style='bold red')
@@ -191,9 +190,9 @@ def recFile():
 
                 console.print("Done! Closing connections...", style='bold green')
 
-                c.send(pickle.dumps("COMPLETE"))
+                c.send(pickle.dumps("TXNCOMPLETE"))
 
-                c.close()
+                # c.close()
 
             elif answer == 'n':
                 # send failure signal
