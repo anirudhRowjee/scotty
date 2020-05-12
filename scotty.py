@@ -22,7 +22,7 @@ LOGO = '''
                         /____/  
 '''
 BATCH_SIZE = 1024
-
+chosen_port = 0
 
 def action_menu():
     OPTIONS = ["send", "receive", "exit"]
@@ -49,9 +49,9 @@ def sendFile():
     RECIEVER = 'localhost'
 
     mainsocket = socket.socket()
-    mainsocket.bind(("localhost", 9999))
+    mainsocket.bind(("localhost", chosen_port))
 
-    console.print("Completed!", style='bold yellow')
+    console.print("Completed! Sender Setup at localhost:",chosen_port, style='bold yellow')
 
     # file chooser
     tk.Tk().withdraw()
@@ -69,50 +69,53 @@ def sendFile():
 
         # ping client with socket
         try:
+
             mainsocket.connect((target_ipv4, target_port))
+
+            '''
+            Now that the sockets have established a connection, send the
+            manifest - a JSON object that has the file size, file name, and
+            extension. This is effectively a handshake process - to allow both
+            server and the client to be consenting to a file transfer
+            '''
+
+            manifest = generate_manifest_from_file(filepath)
+            console.print("sending manifest", style='yellow')
+            filesize = manifest['size']
+
+            dump = pickle.dumps(manifest)
+
+            mainsocket.sendall(dump)
+
+            # listen for manifest consent
+            answer = pickle.loads(mainsocket.recv(1024))
+
+            if int(answer['answer']) == 1:
+                # file sending has been accepted
+                console.print("sending file at .. ", filepath, style='bold yellow')
+
+                with open(filepath, 'rb') as file:
+                    for step in track(range(0, filesize, BATCH_SIZE)):
+                        burst = file.read(BATCH_SIZE)
+                        mainsocket.send(burst)
+
+                console.print("File Successfully sent!", style='bold green')
+
+                token = pickle.loads(mainsocket.recv(512))
+
+                if token == 'COMPLETE':
+                    console.print("File Successfully Recieved!", style='bold green')
+                else:
+                    console.print("Some Error", style='bold red')
+
+            else:
+                console.print("File Send Request Denied. ", style='bold red')
+
+            mainsocket.close()
+
         except socket.error:
             console.print("Socket Error! ", style='bold red')
 
-        '''
-        Now that the sockets have established a connection, send the
-        manifest - a JSON object that has the file size, file name, and
-        extension. This is effectively a handshake process - to allow both
-        server and the client to be consenting to a file transfer
-        '''
-
-        manifest = generate_manifest_from_file(filepath)
-        console.print("sending manifest", style='yellow')
-        filesize = manifest['size']
-
-        dump = pickle.dumps(manifest)
-
-        mainsocket.sendall(dump)
-
-        # listen for manifest consent
-        answer = pickle.loads(mainsocket.recv(1024))
-
-        if int(answer['answer']) == 1:
-            # file sending has been accepted
-            console.print("sending file at .. ", filepath, style='bold yellow')
-
-            with open(filepath, 'rb') as file:
-                for step in track(range(0, filesize, BATCH_SIZE)):
-                    burst = file.read(BATCH_SIZE)
-                    mainsocket.send(burst)
-
-            console.print("File Successfully sent!", style='bold green')
-
-            token = pickle.loads(mainsocket.recv(512))
-
-            if token == 'COMPLETE':
-                console.print("File Successfully Recieved!", style='bold green')
-            else:
-                console.print("Some Error", style='bold red')
-
-        else:
-            console.print("File Send Request Denied. ", style='bold red')
-
-        mainsocket.close()
 
     else:
         print("Fail")
@@ -134,10 +137,10 @@ def recFile():
 
 
     mainsocket = socket.socket()
-    mainsocket.bind(("localhost", 8000))
+    mainsocket.bind(("localhost", chosen_port))
     mainsocket.listen(5)
 
-    console.print("Completed! Reciever Setup at localhost:8000", style='bold yellow')
+    console.print("Completed! Reciever Setup at localhost:", chosen_port, style='bold yellow')
 
     target_ipv4 = input("Enter Target IP Address on LAN >>> ")
 
@@ -214,6 +217,7 @@ if __name__ == '__main__':
     console = rich.console.Console()
     console.print(LOGO, style='bold blue')
     CLIENT = 'localhost'
+    chosen_port = int(input("Enter Port to setup Scotty on >>> "))
     console.print("What Do You Want to Do?", style='bold underline green')
     option = action_menu()
 
