@@ -113,7 +113,7 @@ def sendFile():
 
             mainsocket.close()
 
-        except socket.error:
+        except socket.error as error:
             console.print("Socket Error! ", error , style='bold red')
 
 
@@ -202,7 +202,7 @@ def recFile():
                 c.close()
             mainsocket.close()
 
-        except socket.error:
+        except socket.error as error:
             console.print("Socket Error! ", error,  style='bold red')
 
         mainsocket.close()
